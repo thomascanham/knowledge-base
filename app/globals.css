@@ -1,26 +1,166 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/* ─── Design Tokens ────────────────────────────────────────────── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* Fonts */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Brand palette */
+  --color-brand-50:  #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+  --color-brand-900: #1e3a8a;
+
+  /* Sidebar */
+  --color-sidebar-bg:      #0f172a; /* slate-900 */
+  --color-sidebar-border:  #1e293b; /* slate-800 */
+  --color-sidebar-text:    #94a3b8; /* slate-400 */
+  --color-sidebar-active:  #1e40af; /* blue-800 */
+  --color-sidebar-hover:   #1e293b; /* slate-800 */
+
+  /* Discipline accent colours */
+  --color-fire:           #ef4444;
+  --color-intruder:       #f97316;
+  --color-cctv:           #3b82f6;
+  --color-access-control: #8b5cf6;
+  --color-nurse-call:     #22c55e;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ─── Base ──────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans, system-ui, sans-serif);
+  background-color: #f8fafc; /* slate-50 */
+  color: #0f172a;            /* slate-900 */
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Scrollbar (webkit) ────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ─── Focus ring ────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* ─── TipTap rich text editor ───────────────────────────────────── */
+.tiptap {
+  min-height: 300px;
+  padding: 1rem;
+  outline: none;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #94a3b8;
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* ─── Rich text reading layout (guide content) ──────────────────── */
+.prose-content {
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: #1e293b;
+}
+
+.prose-content h1,
+.prose-content h2,
+.prose-content h3,
+.prose-content h4 {
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: 1.75em;
+  margin-bottom: 0.5em;
+  color: #0f172a;
+}
+
+.prose-content h1 { font-size: 1.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.35em; }
+.prose-content h2 { font-size: 1.25rem; }
+.prose-content h3 { font-size: 1.0625rem; }
+
+.prose-content p { margin-top: 0; margin-bottom: 1em; }
+
+.prose-content ul,
+.prose-content ol { padding-left: 1.5em; margin-bottom: 1em; }
+.prose-content li { margin-bottom: 0.25em; }
+
+.prose-content code {
+  font-family: var(--font-geist-mono, monospace);
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 3px;
+  padding: 0.1em 0.35em;
+  font-size: 0.85em;
+  color: #0f172a;
+}
+
+.prose-content pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  margin-bottom: 1em;
+}
+
+.prose-content pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.875rem;
+  color: inherit;
+}
+
+.prose-content blockquote {
+  border-left: 3px solid #3b82f6;
+  margin: 0 0 1em;
+  padding: 0.5em 1em;
+  background: #eff6ff;
+  border-radius: 0 4px 4px 0;
+  color: #1e40af;
+  font-style: italic;
+}
+
+.prose-content a {
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose-content hr { border: none; border-top: 1px solid #e2e8f0; margin: 2em 0; }
+
+.prose-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1em;
+  font-size: 0.875rem;
+}
+
+.prose-content th {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 0.5em 0.75em;
+  text-align: left;
+  font-weight: 600;
+}
+
+.prose-content td {
+  border: 1px solid #e2e8f0;
+  padding: 0.5em 0.75em;
 }

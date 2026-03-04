@@ -1,0 +1,335 @@
+// Brodman Field Operations Knowledge Base
+// MySQL Schema — Prisma ORM
+// Full-text search enabled for products and guides
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// AUTHENTICATION (NextAuth v5 / Auth.js compatible)
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String    @id @default(cuid())
+  name         String?
+  email        String    @unique
+  emailVerified DateTime? @map("email_verified")
+  image        String?
+  passwordHash String?   @map("password_hash") @db.Text
+  role         Role      @default(ENGINEER)
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  // NextAuth relations
+  accounts     Account[]
+  sessions     Session[]
+
+  // App relations
+  guideVersions GuideVersion[]
+  auditLogs     AuditLog[]
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  OFFICE_STAFF
+  ENGINEER
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ---------------------------------------------------------------------------
+// LOOKUP TABLES
+// ---------------------------------------------------------------------------
+
+model Discipline {
+  id       Int    @id @default(autoincrement())
+  name     String @unique              // e.g. "Fire", "Intruder", "CCTV"
+  slug     String @unique              // e.g. "fire", "intruder", "cctv"
+  color    String @default("#6B7280")  // Hex for UI discipline badges
+  icon     String @default("shield")  // Lucide icon name
+
+  products Product[]
+  guides   Guide[]
+
+  @@map("disciplines")
+}
+
+model Manufacturer {
+  id            Int     @id @default(autoincrement())
+  name          String  @unique
+  slug          String  @unique
+  website       String?
+
+  // Contact details
+  phone         String?           // General / sales line
+  supportPhone  String?  @map("support_phone")   // Technical support line
+  supportEmail  String?  @map("support_email")   // Technical support email
+
+  // Free-text fields
+  address       String?  @db.Text
+  notes         String?  @db.Text  // Portal logins, ordering notes, anything useful
+
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  products Product[]
+
+  @@map("manufacturers")
+}
+
+model Tag {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+  slug String @unique
+
+  products ProductTag[]
+
+  @@map("tags")
+}
+
+// ---------------------------------------------------------------------------
+// PRODUCTS ("The Bible" entries)
+// ---------------------------------------------------------------------------
+
+model Product {
+  id             String @id @default(cuid())
+  internalCode   String @unique @map("internal_code")  // e.g. "FIRE-001"
+  model          String
+  disciplineId   Int    @map("discipline_id")
+  manufacturerId Int    @map("manufacturer_id")
+
+  // Operational data — stored as TEXT for richness + FULLTEXT indexing
+  resetCodes          String? @db.Text @map("reset_codes")
+  engineerCodes       String? @db.Text @map("engineer_codes")
+  defaultCodes        String? @db.Text @map("default_codes")
+  walkTest            String? @db.Text @map("walk_test")
+  commissioningQuirks String? @db.Text @map("commissioning_quirks")
+  commonFaults        String? @db.Text @map("common_faults")
+  notes               String? @db.Text
+
+  // Structured discipline-specific specs (JSON) — shape varies by discipline.
+  // e.g. fire panels store panelType, protocol, zoneCapacity, eolValue, etc.
+  // intruder panels will store grade, signallingType, etc.
+  specs               Json?
+
+  isArchived Boolean  @default(false) @map("is_archived")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  discipline   Discipline   @relation(fields: [disciplineId], references: [id])
+  manufacturer Manufacturer @relation(fields: [manufacturerId], references: [id])
+  guides      ProductGuide[]
+  tags        ProductTag[]
+  attachments Attachment[]
+
+  // Indexes
+  @@index([disciplineId])
+  @@index([manufacturerId])
+  @@index([isArchived])
+  @@index([createdAt])
+
+  // MySQL FULLTEXT index — enables MATCH() AGAINST() queries
+  @@fulltext([model, resetCodes, engineerCodes, defaultCodes, walkTest, commissioningQuirks, commonFaults, notes])
+
+  @@map("products")
+}
+
+// ---------------------------------------------------------------------------
+// GUIDES
+// ---------------------------------------------------------------------------
+
+model Guide {
+  id            String     @id @default(cuid())
+  title         String
+  slug          String     @unique
+  guideType     GuideType  @default(GENERAL) @map("guide_type")
+  disciplineId  Int?       @map("discipline_id")
+  difficulty    Difficulty?
+  estimatedTime String?    @map("estimated_time")  // e.g. "30 mins", "2 hours"
+
+  // Rich text content stored as LongText (supports large TipTap JSON/HTML output)
+  content       String     @db.LongText
+
+  version       Int        @default(1)
+  isPublished   Boolean    @default(true) @map("is_published")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  discipline  Discipline?    @relation(fields: [disciplineId], references: [id])
+  products    ProductGuide[]
+  versions    GuideVersion[]
+  attachments Attachment[]
+
+  // Indexes
+  @@index([disciplineId])
+  @@index([guideType])
+  @@index([isPublished])
+
+  // MySQL FULLTEXT index
+  @@fulltext([title, content])
+
+  @@map("guides")
+}
+
+enum GuideType {
+  PRODUCT_SPECIFIC
+  GENERAL
+}
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+// Version history — every edit snapshots the previous content
+model GuideVersion {
+  id        Int      @id @default(autoincrement())
+  guideId   String   @map("guide_id")
+  content   String   @db.LongText
+  title     String                   // snapshot of title at this version
+  version   Int
+  createdBy String   @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  guide Guide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [createdBy], references: [id])
+
+  @@index([guideId])
+  @@map("guide_versions")
+}
+
+// ---------------------------------------------------------------------------
+// JUNCTION TABLES
+// ---------------------------------------------------------------------------
+
+// Products <-> Guides (many-to-many)
+model ProductGuide {
+  productId String @map("product_id")
+  guideId   String @map("guide_id")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  guide   Guide   @relation(fields: [guideId], references: [id], onDelete: Cascade)
+
+  @@id([productId, guideId])
+  @@map("product_guides")
+}
+
+// Products <-> Tags (many-to-many)
+model ProductTag {
+  productId String @map("product_id")
+  tagId     Int    @map("tag_id")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([productId, tagId])
+  @@map("product_tags")
+}
+
+// ---------------------------------------------------------------------------
+// ATTACHMENTS
+// ---------------------------------------------------------------------------
+
+model Attachment {
+  id           String   @id @default(cuid())
+  filename     String                      // sanitised storage filename
+  originalName String   @map("original_name")
+  mimeType     String   @map("mime_type")
+  sizeBytes    Int      @map("size_bytes")
+  storageKey   String   @map("storage_key") @db.Text  // local path or S3 object key
+
+  productId String? @map("product_id")
+  guideId   String? @map("guide_id")
+
+  uploadedAt DateTime @default(now()) @map("uploaded_at")
+
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  guide   Guide?   @relation(fields: [guideId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
+  @@index([guideId])
+  @@map("attachments")
+}
+
+// ---------------------------------------------------------------------------
+// AUDIT TRAIL
+// ---------------------------------------------------------------------------
+
+// Polymorphic audit trail — entityType + entityId is a soft reference,
+// not a DB-level FK, to support multiple entity types cleanly.
+model AuditLog {
+  id         Int         @id @default(autoincrement())
+  userId     String      @map("user_id")
+  action     AuditAction
+  entityType String      @map("entity_type")  // "product" | "guide" | "user"
+  entityId   String      @map("entity_id")    // CUID of the affected entity
+  changes    Json?                             // JSON diff of what changed
+  ipAddress  String?     @map("ip_address")
+  userAgent  String?     @db.Text @map("user_agent")
+  createdAt  DateTime    @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  VIEW
+}
