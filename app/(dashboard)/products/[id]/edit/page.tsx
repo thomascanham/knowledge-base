@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function EditProductPage({ params }: PageProps) {
   const session = await auth();
-  if (session?.user.role !== "ADMIN") redirect("/products");
+  if (session?.user.role === "OFFICE_STAFF") redirect("/products");
 
   const { id } = await params;
 

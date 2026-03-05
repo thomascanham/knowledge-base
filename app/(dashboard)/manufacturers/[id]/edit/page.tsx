@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function EditManufacturerPage({ params }: PageProps) {
   const session = await auth();
-  if (session?.user.role !== "ADMIN") redirect("/manufacturers");
+  if (session?.user.role === "OFFICE_STAFF") redirect("/manufacturers");
 
   const { id } = await params;
   const manufacturer = await prisma.manufacturer.findUnique({

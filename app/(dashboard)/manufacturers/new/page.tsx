@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Add Manufacturer" };
 
 export default async function NewManufacturerPage() {
   const session = await auth();
-  if (session?.user.role !== "ADMIN") redirect("/manufacturers");
+  if (session?.user.role === "OFFICE_STAFF") redirect("/manufacturers");
 
   return (
     <div className="mx-auto max-w-2xl p-6">

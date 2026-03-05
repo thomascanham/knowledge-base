@@ -48,11 +48,11 @@ const NAV: NavItem[] = [
     exact: true,
   },
   {
-    label: "Products",
+    label: "Bible",
     href: "/products",
     icon: Package,
     children: [
-      { label: "All Products", href: "/products", icon: Package, exact: true },
+      { label: "All", href: "/products", icon: Package, exact: true },
       { label: "Fire Panels", href: "/products?discipline=fire", icon: Flame },
       { label: "Intruder Panels", href: "/products?discipline=intruder", icon: ShieldAlert },
       { label: "CCTV", href: "/products?discipline=cctv", icon: Camera },

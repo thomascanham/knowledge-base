@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ProductDetailPage({ params }: PageProps) {
   const { id } = await params;
   const session = await auth();
-  const isAdmin = session?.user.role === "ADMIN";
+  const canEdit = session?.user.role !== "OFFICE_STAFF";
 
   const product = await prisma.product.findUnique({
     where: { id, isArchived: false },
@@ -75,7 +75,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
           <h1 className="text-2xl font-bold text-slate-900">{product.model}</h1>
           <p className="mt-1 text-slate-500">{product.manufacturer.name}</p>
         </div>
-        {isAdmin && (
+        {canEdit && (
           <Link
             href={`/products/${product.id}/edit`}
             className="flex shrink-0 items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"

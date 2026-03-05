@@ -66,7 +66,7 @@ const DISCIPLINES = [
 
 export default async function NewProductPage() {
   const session = await auth();
-  if (session?.user.role !== "ADMIN") redirect("/products");
+  if (session?.user.role === "OFFICE_STAFF") redirect("/products");
 
   return (
     <div className="mx-auto max-w-2xl p-6">

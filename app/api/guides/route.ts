@@ -39,11 +39,11 @@ export async function GET(req: Request) {
   return NextResponse.json({ data, total, page, limit });
 }
 
-// POST /api/guides — create (admin only)
+// POST /api/guides — create (admin + engineer)
 export async function POST(req: Request) {
   const session = await auth();
   if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  if (session.user.role !== "ADMIN") {
+  if (session.user.role === "OFFICE_STAFF") {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 

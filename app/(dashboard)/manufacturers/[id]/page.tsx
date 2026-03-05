@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ManufacturerDetailPage({ params }: PageProps) {
   const { id } = await params;
   const session = await auth();
-  const isAdmin = session?.user.role === "ADMIN";
+  const canEdit = session?.user.role !== "OFFICE_STAFF";
 
   const manufacturer = await prisma.manufacturer.findUnique({
     where: { id: parseInt(id) },
@@ -58,7 +58,7 @@ export default async function ManufacturerDetailPage({ params }: PageProps) {
             <h1 className="text-2xl font-bold text-slate-900">{manufacturer.name}</h1>
             </div>
         </div>
-        {isAdmin && (
+        {canEdit && (
           <Link
             href={`/manufacturers/${manufacturer.id}/edit`}
             className="flex shrink-0 items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
@@ -155,7 +155,7 @@ export default async function ManufacturerDetailPage({ params }: PageProps) {
                 <Package className="h-4 w-4 text-slate-400" aria-hidden="true" />
                 Products ({manufacturer.products.length})
               </h2>
-              {isAdmin && (
+              {canEdit && (
                 <Link
                   href={`/products/new`}
                   className="text-xs text-blue-600 hover:underline"

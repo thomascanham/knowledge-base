@@ -20,7 +20,7 @@ const ALLOWED_TYPES = new Set([
 // POST /api/upload — upload a file and create an attachment record
 export async function POST(req: Request) {
   const session = await auth();
-  if (!session || session.user.role !== "ADMIN") {
+  if (!session || session.user.role === "OFFICE_STAFF") {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 

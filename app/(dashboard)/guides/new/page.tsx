@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "New Guide" };
 
 export default async function NewGuidePage() {
   const session = await auth();
-  if (session?.user.role !== "ADMIN") redirect("/guides");
+  if (session?.user.role === "OFFICE_STAFF") redirect("/guides");
 
   const [disciplines, products] = await Promise.all([
     prisma.discipline.findMany({ orderBy: { name: "asc" } }),

@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Add Fire Alarm Panel" };
 
 export default async function NewFirePanelPage() {
   const session = await auth();
-  if (session?.user.role !== "ADMIN") redirect("/products");
+  if (session?.user.role === "OFFICE_STAFF") redirect("/products");
 
   const manufacturers = await prisma.manufacturer.findMany({
     orderBy: { name: "asc" },
