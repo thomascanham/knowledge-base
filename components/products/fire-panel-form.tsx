@@ -9,11 +9,22 @@ import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import type { Manufacturer } from "@prisma/client";
 import {
-  Flame, KeyRound, RotateCcw, Footprints,
-  Wrench, AlertTriangle, Zap, FileText, ChevronDown
+  Flame, KeyRound, Key, RotateCcw, Footprints,
+  Wrench, AlertTriangle, Zap, FileText, ChevronDown,
+  Plus, Trash2
 } from "lucide-react";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
+
+interface CodeEntry {
+  name: string;
+  value: string;
+}
+
+interface PanelKeyEntry {
+  name: string;
+  info: string;
+}
 
 interface FirePanelSpecs {
   panelType: string;
@@ -28,6 +39,8 @@ interface FirePanelSpecs {
   standards: string[];
   repeaterCapable: string;
   networkCapable: string;
+  codes: CodeEntry[];
+  keys: PanelKeyEntry[];
 }
 
 interface FirePanelData {
@@ -35,13 +48,10 @@ interface FirePanelData {
   internalCode: string;
   model: string;
   manufacturerId: string;
-  // Specs (structured)
+  // Specs (structured, includes codes array)
   specs: FirePanelSpecs;
-  // Codes
-  engineerCodes: string;
-  defaultCodes: string;
-  resetCodes: string;
   // Procedures (free text)
+  resetCodes: string;
   walkTest: string;
   isolateProcedure: string;
   commissioningQuirks: string;
@@ -113,6 +123,8 @@ const EMPTY_SPECS: FirePanelSpecs = {
   standards: [],
   repeaterCapable: "",
   networkCapable: "",
+  codes: [],
+  keys: [],
 };
 
 // ─── Section wrapper ─────────────────────────────────────────────────────────
@@ -181,13 +193,19 @@ export function FirePanelForm({ manufacturers, disciplineId, product }: FirePane
   const router = useRouter();
   const isEditing = !!product;
 
+  const existingSpecs = product?.specs ?? { ...EMPTY_SPECS };
+  if (!Array.isArray((existingSpecs as FirePanelSpecs).codes)) {
+    (existingSpecs as FirePanelSpecs).codes = [];
+  }
+  if (!Array.isArray((existingSpecs as FirePanelSpecs).keys)) {
+    (existingSpecs as FirePanelSpecs).keys = [];
+  }
+
   const [form, setForm] = useState<FirePanelData>({
     internalCode: product?.internalCode ?? "",
     model: product?.model ?? "",
     manufacturerId: String(product?.manufacturerId ?? ""),
-    specs: product?.specs ?? { ...EMPTY_SPECS },
-    engineerCodes: product?.engineerCodes ?? "",
-    defaultCodes: product?.defaultCodes ?? "",
+    specs: existingSpecs as FirePanelSpecs,
     resetCodes: product?.resetCodes ?? "",
     walkTest: product?.walkTest ?? "",
     isolateProcedure: "",
@@ -208,6 +226,42 @@ export function FirePanelForm({ manufacturers, disciplineId, product }: FirePane
 
   function setSpec<K extends keyof FirePanelSpecs>(key: K, value: FirePanelSpecs[K]) {
     setForm((f) => ({ ...f, specs: { ...f.specs, [key]: value } }));
+  }
+
+  function addCode() {
+    setForm((f) => ({ ...f, specs: { ...f.specs, codes: [...f.specs.codes, { name: "", value: "" }] } }));
+  }
+
+  function updateCode(index: number, field: keyof CodeEntry, value: string) {
+    setForm((f) => {
+      const codes = f.specs.codes.map((c, i) => i === index ? { ...c, [field]: value } : c);
+      return { ...f, specs: { ...f.specs, codes } };
+    });
+  }
+
+  function removeCode(index: number) {
+    setForm((f) => {
+      const codes = f.specs.codes.filter((_, i) => i !== index);
+      return { ...f, specs: { ...f.specs, codes } };
+    });
+  }
+
+  function addKey() {
+    setForm((f) => ({ ...f, specs: { ...f.specs, keys: [...f.specs.keys, { name: "", info: "" }] } }));
+  }
+
+  function updateKey(index: number, field: keyof PanelKeyEntry, value: string) {
+    setForm((f) => {
+      const keys = f.specs.keys.map((k, i) => i === index ? { ...k, [field]: value } : k);
+      return { ...f, specs: { ...f.specs, keys } };
+    });
+  }
+
+  function removeKey(index: number) {
+    setForm((f) => {
+      const keys = f.specs.keys.filter((_, i) => i !== index);
+      return { ...f, specs: { ...f.specs, keys } };
+    });
   }
 
   function toggleStandard(std: string) {
@@ -252,8 +306,8 @@ export function FirePanelForm({ manufacturers, disciplineId, product }: FirePane
         manufacturerId: parseInt(form.manufacturerId),
         disciplineId,
         specs: form.specs,
-        engineerCodes: form.engineerCodes || null,
-        defaultCodes: form.defaultCodes || null,
+        engineerCodes: null,
+        defaultCodes: null,
         resetCodes: form.resetCodes || null,
         walkTest: form.walkTest || null,
         commissioningQuirks: [
@@ -468,39 +522,100 @@ export function FirePanelForm({ manufacturers, disciplineId, product }: FirePane
         optional
       >
         <p className="text-xs text-slate-500">
-          The most-accessed section in the field — fill these in accurately.
+          Add as many codes as needed — engineer codes, user codes, manager PINs, reset codes, etc.
         </p>
-        <div>
-          <Textarea
-            label="Engineer / Installer Code"
-            value={form.engineerCodes}
-            onChange={(e) => setField("engineerCodes", e.target.value)}
-            placeholder={`e.g.\nDefault: 1234\nLevel 3 access: 9999\nSounder silence: hold zone button 3 secs`}
-            rows={4}
-          />
-          <FieldHint>Include all access levels and any non-obvious entry sequences</FieldHint>
-        </div>
-        <div>
-          <Textarea
-            label="Default User / Manager Code"
-            value={form.defaultCodes}
-            onChange={(e) => setField("defaultCodes", e.target.value)}
-            placeholder={`e.g.\nDefault user code: 0000\nManager code: 1111`}
-            rows={3}
-          />
-        </div>
-        <div>
-          <Textarea
-            label="Reset / Panel Code"
-            value={form.resetCodes}
-            onChange={(e) => setField("resetCodes", e.target.value)}
-            placeholder={`e.g.\nFactory reset: hold * + 9 on power up\nFull reset code: 9999`}
-            rows={3}
-          />
-        </div>
+
+        {form.specs.codes.length > 0 && (
+          <div className="space-y-2">
+            {form.specs.codes.map((entry, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <Input
+                  placeholder="Code name (e.g. Engineer Code)"
+                  value={entry.name}
+                  onChange={(e) => updateCode(i, "name", e.target.value)}
+                  className="flex-1"
+                />
+                <Input
+                  placeholder="Value (e.g. 1234)"
+                  value={entry.value}
+                  onChange={(e) => updateCode(i, "value", e.target.value)}
+                  className="w-40 font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeCode(i)}
+                  className="shrink-0 rounded-md p-2 text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                  aria-label="Remove code"
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={addCode}
+          className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-slate-300 px-3 py-2 text-sm text-slate-500 hover:border-amber-400 hover:text-amber-600 transition-colors"
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          Add Code
+        </button>
       </FormSection>
 
-      {/* ── 3. RESET PROCEDURE ───────────────────────────────────────────── */}
+      {/* ── 3. PANEL KEYS ────────────────────────────────────────────────── */}
+      <FormSection
+        title="Panel Keys"
+        icon={Key}
+        iconColor="bg-amber-50 text-amber-700"
+        defaultOpen
+        optional
+      >
+        <p className="text-xs text-slate-500">
+          Record physical keys associated with this panel — cabinet keys, isolator keys, etc.
+        </p>
+
+        {form.specs.keys.length > 0 && (
+          <div className="space-y-2">
+            {form.specs.keys.map((entry, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <Input
+                  placeholder="Key name (e.g. Cabinet Key)"
+                  value={entry.name}
+                  onChange={(e) => updateKey(i, "name", e.target.value)}
+                  className="flex-1"
+                />
+                <Input
+                  placeholder="Info (e.g. Yale, tagged with serial no.)"
+                  value={entry.info}
+                  onChange={(e) => updateKey(i, "info", e.target.value)}
+                  className="flex-1"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeKey(i)}
+                  className="shrink-0 rounded-md p-2 text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                  aria-label="Remove key"
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={addKey}
+          className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-slate-300 px-3 py-2 text-sm text-slate-500 hover:border-amber-400 hover:text-amber-600 transition-colors"
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          Add Key
+        </button>
+      </FormSection>
+
+      {/* ── 4. RESET PROCEDURE ──────────────────────────────────────────── */}
       <FormSection
         title="Reset Procedure"
         icon={RotateCcw}

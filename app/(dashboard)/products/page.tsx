@@ -38,7 +38,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   const [products, total, disciplines, manufacturers] = await Promise.all([
     prisma.product.findMany({
       where,
-      orderBy: [{ discipline: { name: "asc" } }, { model: "asc" }],
+      orderBy: [{ internalCode: "asc" }],
       skip,
       take: PAGE_SIZE,
       include: {
@@ -54,6 +54,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   ]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+  const activeDiscipline = disciplines.find((d) => d.slug === params.discipline);
 
   return (
     <div className="flex h-full">
@@ -95,10 +96,20 @@ export default async function ProductsPage({ searchParams }: PageProps) {
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mb-5 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-slate-900">Products</h1>
+            <div className="flex items-center gap-2">
+              {activeDiscipline && (
+                <span
+                  className="h-3 w-3 shrink-0 rounded-full"
+                  style={{ backgroundColor: activeDiscipline.color }}
+                  aria-hidden="true"
+                />
+              )}
+              <h1 className="text-xl font-bold text-slate-900">
+                {activeDiscipline ? activeDiscipline.name : "All Products"}
+              </h1>
+            </div>
             <p className="text-sm text-slate-500">
               {total} {total === 1 ? "product" : "products"}
-              {params.discipline && ` · ${params.discipline}`}
             </p>
           </div>
           <Link
