@@ -105,7 +105,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
                 />
               )}
               <h1 className="text-xl font-bold text-slate-900">
-                {activeDiscipline ? activeDiscipline.name : "All Products"}
+                {activeDiscipline ? activeDiscipline.name : "All Systems"}
               </h1>
             </div>
             <p className="text-sm text-slate-500">

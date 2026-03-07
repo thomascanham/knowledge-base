@@ -1,5 +1,7 @@
 import { cn } from "@/lib/utils";
 
+type IconComponent = React.ComponentType<{ className?: string }>;
+
 interface CardProps {
   children: React.ReactNode;
   className?: string;
@@ -40,19 +42,28 @@ export function CardTitle({ children, className }: { children: React.ReactNode; 
 
 export function CardSection({
   title,
+  icon: Icon,
+  iconColor,
   children,
   className,
 }: {
   title?: string;
+  icon?: IconComponent;
+  iconColor?: string;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <section className={cn("space-y-2", className)}>
+    <section className={cn("", className)}>
       {title && (
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-          {title}
-        </h4>
+        <div className="-mx-5 -mt-5 mb-4 border-b border-slate-100 bg-slate-50 px-5 py-3 flex items-center gap-3">
+          {Icon && iconColor && (
+            <div className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-lg", iconColor)}>
+              <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+            </div>
+          )}
+          <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
+        </div>
       )}
       {children}
     </section>

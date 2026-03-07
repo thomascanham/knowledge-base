@@ -7,8 +7,17 @@ import { FirePanelSpecs } from "@/components/products/fire-panel-specs";
 import { formatBytes } from "@/lib/utils";
 import {
   FileText, Paperclip, Tag, Clock, ChevronRight,
-  Edit, ArrowLeft, Download
+  Edit, ArrowLeft, Download,
+  KeyRound, Footprints, Wrench, AlertTriangle, RotateCcw,
 } from "lucide-react";
+
+const DISCIPLINE_ICON_COLOR: Record<string, string> = {
+  fire:             "bg-red-50 text-red-600",
+  intruder:         "bg-orange-50 text-orange-600",
+  cctv:             "bg-blue-50 text-blue-600",
+  "access-control": "bg-purple-50 text-purple-600",
+  "nurse-call":     "bg-green-50 text-green-600",
+};
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -50,6 +59,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
   if (!product) notFound();
 
   const isFirePanel = product.discipline.slug === "fire";
+  const iconColor = DISCIPLINE_ICON_COLOR[product.discipline.slug] ?? "bg-slate-100 text-slate-500";
 
   return (
     <div className="mx-auto max-w-5xl p-6 space-y-6">
@@ -111,10 +121,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
             <FirePanelSpecs specs={product.specs as Record<string, unknown>} />
           )}
 
-          {/* Access Codes — priority for field engineers */}
-          {(product.resetCodes || product.engineerCodes || product.defaultCodes) && (
+          {/* Access Codes — legacy free-text fields (pre-specs.codes era) */}
+          {(product.engineerCodes || product.defaultCodes) && (
             <Card>
-              <CardSection title="Access Codes">
+              <CardSection title="Access Codes" icon={KeyRound} iconColor={iconColor}>
                 <div className="space-y-4">
                   {product.engineerCodes && (
                     <InfoBlock label="Engineer / Installer Code" value={product.engineerCodes} mono />
@@ -122,17 +132,25 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   {product.defaultCodes && (
                     <InfoBlock label="Default User / Manager Code" value={product.defaultCodes} mono />
                   )}
-                  {product.resetCodes && (
-                    <InfoBlock label="Reset / Panel Code" value={product.resetCodes} mono />
-                  )}
                 </div>
+              </CardSection>
+            </Card>
+          )}
+
+          {/* Reset Procedure */}
+          {product.resetCodes && (
+            <Card>
+              <CardSection title="Reset Procedure" icon={RotateCcw} iconColor={iconColor}>
+                <pre className="whitespace-pre-wrap font-sans text-sm text-slate-700 leading-relaxed">
+                  {product.resetCodes}
+                </pre>
               </CardSection>
             </Card>
           )}
 
           {product.walkTest && (
             <Card>
-              <CardSection title="Walk Test Procedure">
+              <CardSection title="Walk Test Procedure" icon={Footprints} iconColor={iconColor}>
                 <pre className="whitespace-pre-wrap font-sans text-sm text-slate-700 leading-relaxed">
                   {product.walkTest}
                 </pre>
@@ -142,7 +160,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {product.commissioningQuirks && (
             <Card>
-              <CardSection title="Commissioning">
+              <CardSection title="Commissioning" icon={Wrench} iconColor={iconColor}>
                 <pre className="whitespace-pre-wrap font-sans text-sm text-slate-700 leading-relaxed">
                   {product.commissioningQuirks}
                 </pre>
@@ -152,7 +170,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {product.commonFaults && (
             <Card>
-              <CardSection title="Common Faults & Fault Finding">
+              <CardSection title="Common Faults & Fault Finding" icon={AlertTriangle} iconColor={iconColor}>
                 <pre className="whitespace-pre-wrap font-sans text-sm text-slate-700 leading-relaxed">
                   {product.commonFaults}
                 </pre>
@@ -162,7 +180,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {product.notes && (
             <Card>
-              <CardSection title="Notes">
+              <CardSection title="Notes" icon={FileText} iconColor={iconColor}>
                 <pre className="whitespace-pre-wrap font-sans text-sm text-slate-700 leading-relaxed">
                   {product.notes}
                 </pre>

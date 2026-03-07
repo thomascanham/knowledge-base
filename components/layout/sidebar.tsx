@@ -216,7 +216,7 @@ export function Sidebar({ isAdmin, userEmail, userName, mobileOpen, onMobileClos
               <Flame className="h-4 w-4 text-white" aria-hidden="true" />
             </div>
             <span className="text-sm font-semibold text-white tracking-tight">
-              Brodman KB
+              Brodman Bible
             </span>
           </Link>
           <button
