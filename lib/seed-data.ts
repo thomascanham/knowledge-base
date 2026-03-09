@@ -9,4 +9,5 @@ export const DISCIPLINES = [
   { name: "CCTV", slug: "cctv", color: "#3B82F6", icon: "camera" },
   { name: "Access Control", slug: "access-control", color: "#8B5CF6", icon: "key-round" },
   { name: "Nurse Call", slug: "nurse-call", color: "#22C55E", icon: "bell" },
+  { name: "Emergency Lights", slug: "emergency-lights", color: "#EAB308", icon: "lightbulb" },
 ] as const;

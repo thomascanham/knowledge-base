@@ -7,6 +7,7 @@ const variants = {
   cctv: "bg-blue-100 text-blue-800 border-blue-200",
   "access-control": "bg-purple-100 text-purple-800 border-purple-200",
   "nurse-call": "bg-green-100 text-green-800 border-green-200",
+  "emergency-lights": "bg-yellow-100 text-yellow-800 border-yellow-200",
   success: "bg-green-100 text-green-800 border-green-200",
   warning: "bg-amber-100 text-amber-800 border-amber-200",
   danger: "bg-red-100 text-red-800 border-red-200",
@@ -42,7 +43,7 @@ export function Badge({ children, variant = "default", className, dot }: BadgePr
 
 /** Render a discipline badge with the correct colour automatically. */
 export function DisciplineBadge({ slug, name }: { slug: string; name: string }) {
-  const knownVariants = ["fire", "intruder", "cctv", "access-control", "nurse-call"] as const;
+  const knownVariants = ["fire", "intruder", "cctv", "access-control", "nurse-call", "emergency-lights"] as const;
   const variant = knownVariants.includes(slug as (typeof knownVariants)[number])
     ? (slug as keyof typeof variants)
     : "default";

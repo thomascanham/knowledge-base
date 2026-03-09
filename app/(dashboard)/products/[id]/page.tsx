@@ -16,7 +16,8 @@ const DISCIPLINE_ICON_COLOR: Record<string, string> = {
   intruder:         "bg-orange-50 text-orange-600",
   cctv:             "bg-blue-50 text-blue-600",
   "access-control": "bg-purple-50 text-purple-600",
-  "nurse-call":     "bg-green-50 text-green-600",
+  "nurse-call":        "bg-green-50 text-green-600",
+  "emergency-lights":  "bg-yellow-50 text-yellow-600",
 };
 import Link from "next/link";
 import type { Metadata } from "next";

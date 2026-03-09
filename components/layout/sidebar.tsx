@@ -19,6 +19,8 @@ import {
   Users,
   X,
   Building2,
+  MapPin,
+  Lightbulb,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
@@ -58,6 +60,7 @@ const NAV: NavItem[] = [
       { label: "CCTV", href: "/products?discipline=cctv", icon: Camera },
       { label: "Access Control", href: "/products?discipline=access-control", icon: KeyRound },
       { label: "Nurse Call", href: "/products?discipline=nurse-call", icon: Bell },
+      { label: "Emergency Lights", href: "/products?discipline=emergency-lights", icon: Lightbulb },
     ],
   },
   {
@@ -69,6 +72,11 @@ const NAV: NavItem[] = [
       { label: "General", href: "/guides?type=GENERAL", icon: BookOpen },
       { label: "Product Guides", href: "/guides?type=PRODUCT_SPECIFIC", icon: Package },
     ],
+  },
+  {
+    label: "Sites",
+    href: "/sites",
+    icon: MapPin,
   },
   {
     label: "Manufacturers",
@@ -92,6 +100,7 @@ const DISCIPLINE_DOTS: Record<string, string> = {
   cctv: "bg-blue-500",
   "access-control": "bg-purple-500",
   "nurse-call": "bg-green-500",
+  "emergency-lights": "bg-yellow-400",
 };
 
 // ────────────────────────────────────────────────────────────────
